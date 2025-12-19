@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetroQuest Game Builder - Modular Edition</title>
+    <style>
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --bg-hover: #3e3e42;
+            --text-primary: #cccccc;
+            --text-secondary: #969696;
+            --border-color: #464647;
+            --accent-color: #007acc;
+            --accent-primary: #007acc;
+            --accent-error: #f48771;
+            --success-color: #89d185;
+            --hotspot-color: #ff6b6b;
+            --walkarea-color: #4ecdc4;
+            --object-color: #45b7d1;
+            --character-color: #9b59b6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .menu-bar {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            padding: 0;
+            height: 30px;
+        }
+
+        .menu-item {
+            padding: 6px 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 13px;
+        }
+
+        .menu-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .toolbar {
+            background-color: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            height: 40px;
+        }
+
+        .tool-button {
+            padding: 6px 12px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-primary);
+        }
+
+        .tool-button:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .tool-button.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .tool-button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .project-tree {
+            width: 280px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .tree-header {
+            padding: 10px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tree-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .canvas-area {
+            flex: 1;
+            background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-controls {
+            padding: 8px;
+            background-color: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .zoom-select {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            background-image:
+                linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+                linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            position: relative;
+        }
+
+        #gameCanvas {
+            background-color: #000;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            image-rendering: -webkit-optimize-contrast;
+            -ms-interpolation-mode: nearest-neighbor;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+            cursor: crosshair;
+        }
+
+        .properties-panel {
+            width: 350px;
+            background-color: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+        }
+
+        .property-group {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .property-header {
+            padding: 12px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            background-color: var(--bg-tertiary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .property-item {
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .property-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .property-input {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .property-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .status-bar {
+            height: 26px;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            color: white;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--accent-error);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .list-item {
+            padding: 8px 10px;
+            margin: 4px 0;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .list-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .list-item.selected {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .color-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-right: 8px;
+        }
+
+        .no-selection {
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .object-library-item {
+            padding: 8px 10px;
+            margin: 4px 0;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            cursor: grab;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .toolbar-separator {
+            width: 1px;
+            height: 24px;
+            background-color: var(--border-color);
+            margin: 0 8px;
+            align-self: center;
+        }
+
+        .test-button {
+            background-color: var(--success-color) !important;
+            border-color: var(--success-color) !important;
+            color: white !important;
+            font-weight: 600;
+        }
+
+        .test-button:hover {
+            background-color: #7ac177 !important;
+            border-color: #7ac177 !important;
+        }
+
+        .test-button svg {
+            fill: white !important;
+        }
+
+        .object-library-item:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--object-color);
+        }
+
+        .object-library-item:active {
+            cursor: grabbing;
+        }
+
+        .object-sprite {
+            font-size: 18px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Loading indicator */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bg-tertiary);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loadingScreen" class="loading">
+        <div class="spinner"></div>
+        Loading RetroQuest Game Builder...
+    </div>
+
+    <div id="app" style="display: none;">
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-item" onclick="showFileMenu(event)">File</div>
+            <div class="menu-item">Edit</div>
+            <div class="menu-item">View</div>
+            <div class="menu-item">Tools</div>
+            <div class="menu-item">Help</div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <button class="tool-button active" data-tool="select" onclick="selectTool('select')">
+                <svg viewBox="0 0 16 16">
+                    <path d="M1 1 L6 11 L8 8 L11 13 L13 11 L8 6 L11 6 Z"/>
+                </svg>
+                Select
+            </button>
+            <button class="tool-button" data-tool="room" onclick="selectTool('room')">
+                <svg viewBox="0 0 16 16">
+                    <rect x="1" y="3" width="14" height="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="3" y="5" width="10" height="6" fill="none" stroke="currentColor" stroke-width="1"/>
+                </svg>
+                Room
+            </button>
+            <button class="tool-button" data-tool="hotspot" onclick="selectTool('hotspot')">
+                <svg viewBox="0 0 16 16">
+                    <rect x="2" y="2" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Hotspot
+            </button>
+            <button class="tool-button" data-tool="walkarea" onclick="selectTool('walkarea')">
+                <svg viewBox="0 0 16 16">
+                    <path d="M2 8 L8 2 L14 8 L14 14 L2 14 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Walk Area
+            </button>
+            <button class="tool-button" data-tool="object" onclick="selectTool('object')">
+                <svg viewBox="0 0 16 16">
+                    <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Object
+            </button>
+            <!-- NEW CHARACTER BUTTON -->
+            <button class="tool-button" data-tool="character" onclick="selectTool('character')">
+                <svg viewBox="0 0 16 16">
+                    <circle cx="8" cy="5" r="3" fill="currentColor"/>
+                    <path d="M4 15 C4 11, 6 9, 8 9 S12 11, 12 15" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Character
+            </button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Project Tree -->
+            <div class="project-tree">
+                <!-- Room List -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        ROOMS
+                        <span id="roomCount" style="background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">1</span>
+                    </div>
+                    <div id="roomList" style="padding: 8px;">
+                        <!-- Room list will be populated by RoomModule -->
+                    </div>
+                </div>
+
+                <!-- Character List -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        CHARACTERS
+                        <span id="characterCount" style="background: var(--character-color); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">0</span>
+                    </div>
+                    <div id="characterList" style="padding: 8px;">
+                        <!-- Character list will be populated by CharacterModule -->
+                    </div>
+                </div>
+
+                <!-- Hotspot List -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        HOTSPOTS
+                        <span id="hotspotCount" style="background: var(--hotspot-color); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">0</span>
+                    </div>
+                    <div id="hotspotList" style="padding: 8px;">
+                        <!-- Hotspot list will be populated by HotspotModule -->
+                    </div>
+                </div>
+
+                <!-- Walk Area List -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        WALK AREAS
+                        <span id="walkAreaCount" style="background: var(--walkarea-color); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">0</span>
+                    </div>
+                    <div id="walkAreaList" style="padding: 8px;">
+                        <!-- Walk area list will be populated by WalkAreaModule -->
+                    </div>
+                </div>
+
+                <!-- Object Library -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        OBJECT LIBRARY
+                        <button onclick="createCustomObject()" class="btn btn-primary" style="padding: 2px 6px; font-size: 10px;">
+                            + Add
+                        </button>
+                    </div>
+                    <div id="objectLibrary" style="padding: 8px;">
+                        <!-- Object library will be populated by ObjectModule -->
+                    </div>
+                </div>
+
+                <!-- Room Objects -->
+                <div class="tree-section">
+                    <div class="tree-header">
+                        ROOM OBJECTS
+                        <span id="objectCount" style="background: var(--object-color); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px;">0</span>
+                    </div>
+                    <div id="objectList" style="padding: 8px;">
+                        <!-- Object list will be populated by ObjectModule -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <div class="canvas-controls">
+                    <div class="control-group">
+                        <label style="font-size: 12px; font-weight: 500;">Zoom:</label>
+                        <select id="zoomLevel" onchange="setZoom(this.value)" class="zoom-select">
+                            <option value="0.5">50%</option>
+                            <option value="1" selected>100%</option>
+                            <option value="2">200%</option>
+                            <option value="4">400%</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label style="font-size: 12px;">
+                            <input type="checkbox" id="showGrid" onchange="toggleGrid()">
+                            Show Grid
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label style="font-size: 12px;">
+                            <input type="checkbox" id="showHotspots" onchange="toggleHotspots()" checked>
+                            Show Hotspots
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label style="font-size: 12px;">
+                            <input type="checkbox" id="showWalkAreas" onchange="toggleWalkAreas()" checked>
+                            Show Walk Areas
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label style="font-size: 12px;">
+                            <input type="checkbox" id="showObjects" onchange="toggleObjects()" checked>
+                            Show Objects
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label style="font-size: 12px;">
+                            <input type="checkbox" id="showCharacters" onchange="toggleCharacters()" checked>
+                            Show Characters
+                        </label>
+                    </div>
+
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+                        <button onclick="uploadBackground()" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">
+                            🖼️ Background
+                        </button>
+                        <button onclick="clearBackground()" class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="canvas-container"
+                     ondragover="handleCanvasDragOver(event)"
+                     ondrop="handleCanvasDrop(event)"
+                     ondragleave="handleCanvasDragLeave(event)">
+                    <canvas id="gameCanvas" width="320" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Properties Panel -->
+            <div class="properties-panel">
+                <div class="property-group">
+                    <div class="property-header" id="propertiesTitle">
+                        SELECT TOOL
+                    </div>
+                    <div id="propertiesContent">
+                        <div class="no-selection">
+                            <p>Select a tool and element to edit properties</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="statusText">Loading modules...</span>
+            <span id="saveStatus" style="padding: 2px 8px; border-radius: 3px; font-size: 11px; background: var(--success-color); color: #000;">Ready</span>
+        </div>
+    </div>
+
+    <!-- Load all modules including character module -->
+    <script src="core.js"></script>
+    <script src="select-module.js"></script>
+    <script src="room-module.js"></script>
+    <script src="hotspot-module.js"></script>
+    <script src="walkarea-module.js"></script>
+    <script src="object-module.js"></script>
+    <script src="character-module.js"></script>
+    <script src="test-game-module.js"></script>
+
+    <script>
+        // Initialize the application when all modules are loaded
+        window.addEventListener('load', () => {
+            if (typeof RetroQuest !== 'undefined') {
+                RetroQuest.initialize();
+            } else {
+                console.log('RetroQuest core not loaded - modules will initialize individually');
+            }
+        });
+
+        // Global function fallbacks for when RetroQuest system isn't loaded
+        function selectTool(tool) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.selectTool) {
+                RetroQuest.selectTool(tool);
+            } else {
+                console.log('Tool selected:', tool);
+            }
+        }
+
+        function setZoom(zoom) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.setZoom) {
+                RetroQuest.setZoom(zoom);
+            } else {
+                console.log('Zoom set to:', zoom);
+            }
+        }
+
+        function toggleGrid() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.toggleGrid) {
+                RetroQuest.toggleGrid();
+            } else {
+                console.log('Grid toggled');
+            }
+        }
+
+        function toggleHotspots() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.toggleHotspots) {
+                RetroQuest.toggleHotspots();
+            } else {
+                console.log('Hotspots toggled');
+            }
+        }
+
+        function toggleWalkAreas() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.toggleWalkAreas) {
+                RetroQuest.toggleWalkAreas();
+            } else {
+                console.log('Walk areas toggled');
+            }
+        }
+
+        function toggleObjects() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.toggleObjects) {
+                RetroQuest.toggleObjects();
+            } else {
+                console.log('Objects toggled');
+            }
+        }
+
+        function toggleCharacters() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.toggleCharacters) {
+                RetroQuest.toggleCharacters();
+            } else {
+                console.log('Characters toggled');
+            }
+        }
+
+        function uploadBackground() {
+            // Always use fallback implementation since RetroQuest modules may not be fully loaded
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        // Store background data globally for modules to access
+                        if (!window.gameData) window.gameData = {};
+                        if (!window.gameData.rooms) window.gameData.rooms = { 1: {} };
+                        window.gameData.rooms[1].backgroundImageData = event.target.result;
+
+                        // Try to update canvas if available
+                        const canvas = document.getElementById('gameCanvas');
+                        if (canvas) {
+                            const ctx = canvas.getContext('2d');
+                            const img = new Image();
+                            img.onload = () => {
+                                ctx.clearRect(0, 0, 320, 200);
+                                ctx.drawImage(img, 0, 0, 320, 200);
+                            };
+                            img.src = event.target.result;
+                        }
+
+                        console.log('Background uploaded:', file.name);
+
+                        // Try RetroQuest method as backup
+                        if (typeof RetroQuest !== 'undefined' && RetroQuest.modules?.room?.uploadBackground) {
+                            try {
+                                RetroQuest.modules.room.setBackgroundData(event.target.result);
+                            } catch (error) {
+                                console.log('RetroQuest storage failed, using fallback');
+                            }
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
+        function clearBackground() {
+            // Always use fallback implementation
+            if (confirm('Clear the background image? This cannot be undone.')) {
+                if (window.gameData?.rooms?.[1]) {
+                    window.gameData.rooms[1].backgroundImageData = null;
+                }
+
+                // Clear canvas if available
+                const canvas = document.getElementById('gameCanvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, 320, 200);
+                    ctx.fillStyle = '#2a2a2a';
+                    ctx.fillRect(0, 0, 320, 200);
+                }
+
+                console.log('Background cleared');
+
+                // Try RetroQuest method as backup
+                if (typeof RetroQuest !== 'undefined' && RetroQuest.modules?.room?.clearBackground) {
+                    try {
+                        RetroQuest.modules.room.clearBackground();
+                    } catch (error) {
+                        console.log('RetroQuest clear failed, using fallback');
+                    }
+                }
+            }
+        }
+
+        function createCustomObject() {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.modules?.object?.createCustomObject) {
+                RetroQuest.modules.object.createCustomObject();
+            } else {
+                console.log('Create custom object requested');
+            }
+        }
+
+        function showFileMenu(event) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.showFileMenu) {
+                RetroQuest.showFileMenu(event);
+            } else {
+                console.log('File menu requested');
+            }
+        }
+
+        function handleCanvasDragOver(event) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.handleCanvasDragOver) {
+                RetroQuest.handleCanvasDragOver(event);
+            } else {
+                event.preventDefault();
+            }
+        }
+
+        function handleCanvasDrop(event) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.handleCanvasDrop) {
+                RetroQuest.handleCanvasDrop(event);
+            } else {
+                event.preventDefault();
+
+                // Get canvas coordinates
+                const canvas = document.getElementById('gameCanvas');
+                const rect = canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                // Try character module drop handling
+                if (window.RetroQuest?.modules?.character?.handleCanvasDrop) {
+                    const handled = window.RetroQuest.modules.character.handleCanvasDrop(event, x, y);
+                    if (handled) return;
+                }
+
+                console.log('Canvas drop at:', x, y);
+            }
+        }
+
+        function handleCanvasDragLeave(event) {
+            if (typeof RetroQuest !== 'undefined' && RetroQuest.handleCanvasDragLeave) {
+                RetroQuest.handleCanvasDragLeave(event);
+            } else {
+                event.preventDefault();
+            }
+        }
+    </script>
+</body>
+</html>
