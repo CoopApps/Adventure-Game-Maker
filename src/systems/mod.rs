@@ -3,15 +3,6 @@
 use bevy::prelude::*;
 
 // Quest for Glory stat system
-pub mod rpg_stats;
-
-// Quest system
-pub mod quests;
-
-// NPC AI / Virtual Theatre
-pub mod npc_ai;
-
-// Placeholder modules
 pub mod rpg_stats {
     use bevy::prelude::*;
 

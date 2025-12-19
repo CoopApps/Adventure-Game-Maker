@@ -34,7 +34,7 @@ bevy_kira_audio = "0.20"
 bevy_framepace = "0.17"
 
 [dev-dependencies]
-bevy_inspector_egui = "0.25"
+bevy-inspector-egui = "0.25"
 
 [profile.dev]
 opt-level = 1 # Faster debug builds
